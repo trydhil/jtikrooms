@@ -1,0 +1,261 @@
+/* Login Success Animations - Mobile Optimized */
+.login-toast {
+    position: fixed;
+    top: 80px;
+    right: 15px;
+    left: 15px;
+    background: white;
+    border-radius: 15px;
+    padding: 1.25rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border-left: 4px solid #10b981;
+    transform: translateY(-100px);
+    opacity: 0;
+    animation: slideDownToast 0.6s ease forwards;
+    z-index: 10000;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+@keyframes slideDownToast {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.toast-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toast-message {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.toast-progress {
+    width: 100%;
+    height: 3px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin-top: 1rem;
+    overflow: hidden;
+}
+
+.toast-progress-bar {
+    width: 100%;
+    height: 100%;
+    background: #10b981;
+    animation: toastProgress 4s linear forwards;
+}
+
+@keyframes toastProgress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+/* Confetti Animation - Mobile Friendly */
+.confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9998;
+}
+
+.confetti {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    opacity: 0;
+}
+
+.confetti-1 { background: #3b82f6; animation: confettiFall 2s ease 0.1s forwards; }
+.confetti-2 { background: #10b981; animation: confettiFall 2s ease 0.2s forwards; }
+.confetti-3 { background: #f59e0b; animation: confettiFall 2s ease 0.3s forwards; }
+.confetti-4 { background: #ef4444; animation: confettiFall 2s ease 0.4s forwards; }
+.confetti-5 { background: #8b5cf6; animation: confettiFall 2s ease 0.5s forwards; }
+
+@keyframes confettiFall {
+    0% {
+        opacity: 1;
+        transform: translateY(-100px) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(360deg);
+    }
+}
+
+/* Pulse effect for menu items */
+.pulse-highlight {
+    animation: menuPulse 2s ease-in-out;
+    background: rgba(59, 130, 246, 0.1) !important;
+    border-radius: 8px;
+}
+/* Improved time display */
+.toast-message small {
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.toast-message .fas {
+    width: 12px;
+    margin-right: 0.25rem;
+}
+
+/* Mobile optimization for time display */
+@media (max-width: 480px) {
+    .toast-message small {
+        font-size: 0.75rem;
+    }
+}
+
+@keyframes menuPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+/* Dashboard animations */
+.dashboard-pulse {
+    animation: dashboardPulse 2s ease-in-out;
+}
+
+@keyframes dashboardPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+/* Ripple effect */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.6);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .login-toast {
+        top: 70px;
+        right: 10px;
+        left: 10px;
+        padding: 1rem;
+    }
+    
+    .toast-header {
+        gap: 0.75rem;
+    }
+    
+    .toast-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .toast-title {
+        font-size: 0.95rem;
+    }
+    
+    .toast-message {
+        font-size: 0.85rem;
+    }
+    
+    .confetti {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-toast {
+        top: 60px;
+        border-radius: 12px;
+    }
+    
+    .toast-title {
+        font-size: 0.9rem;
+    }
+    
+    .toast-message {
+        font-size: 0.8rem;
+    }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .login-toast,
+    .confetti,
+    .pulse-highlight,
+    .dashboard-pulse,
+    .ripple {
+        animation: none;
+    }
+    
+    .login-toast {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
