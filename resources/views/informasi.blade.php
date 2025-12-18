@@ -1,17 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Informasi - Dasher')
+@section('title', 'Informasi - JTIK ROOMS')
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/informasi.css') }}" />
-@section('content')
 
+@section('content')
 <div class="header">
     <h2><i class="fas fa-info-circle me-2"></i>Informasi JTIK</h2>
     <div class="user-info-main">
-        <div class="user-avatar-small">
-            <i class="fas fa-user"></i>
-        </div>
+        
     </div>
 </div>
 
@@ -265,9 +263,9 @@
                     </div>
                     <div class="staff-list" id="staff-list">
                         @foreach(($about['detail']['staff'] ?? [
-                            'Maya Sarí, S.Adm. - Kepala Tata Usaha',
+                            'Maya Sari, S.Adm. - Kepala Tata Usaha',
                             'Rudi Hermawan - Staf Administrasi',
-                            'Sarí Indah, A.Md. - Staf Akademik',
+                            'Sari Indah, A.Md. - Staf Akademik',
                             'Budi Santoso - Staf Keuangan',
                             'Anita Wijaya - Staf Perpustakaan'
                         ]) as $staff)

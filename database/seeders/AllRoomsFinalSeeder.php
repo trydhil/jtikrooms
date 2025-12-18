@@ -60,17 +60,22 @@ class AllRoomsFinalSeeder extends Seeder
     private function generatePermanentQR($roomName, $qrContent)
     {
         try {
-            // Generate QR Code
-            $qrCode = QrCode::format('png')
+            // UBAH KE SVG AGAR TIDAK BUTUH IMAGICK
+            $qrCode = QrCode::format('svg') 
                 ->size(400)
                 ->margin(2)
                 ->errorCorrection('H')
                 ->generate($qrContent);
             
-            // Simpan dengan nama permanen
-            $fileName = "qr-permanent-{$roomName}.png";
+            // Simpan dengan ekstensi .svg
+            $fileName = "qr-permanent-{$roomName}.svg"; 
             $filePath = "qrcodes/{$fileName}";
             
+            // Pastikan folder ada
+            if (!Storage::disk('public')->exists('qrcodes')) {
+                Storage::disk('public')->makeDirectory('qrcodes');
+            }
+
             Storage::disk('public')->put($filePath, $qrCode);
             
             return Storage::url($filePath);

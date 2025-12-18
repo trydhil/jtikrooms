@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Login - Dasher</title>
+    <title>Login - JTIK ROOM'S</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -475,12 +475,12 @@
                 <div class="brand-logo">
                     <div class="logo-img">                            <img src="{{ asset('img/logo1.png') }}" alt="Logo" class="brand-img img-fluid mx-auto d-block" />
 </div>
-                    <div class="brand-name">Dasher</div>
+                    <div class="brand-name">JTIK ROOM'S</div>
                 </div>
             </div>
 
             <div class="hero-content slide-in-left">
-                <h1 class="hero-title">Sistem Manajemen Ruangan Modern</h1>
+                <h1 class="hero-title">Sistem Manajemen Ruangan JTIK ROOM'S</h1>
                 <p class="hero-subtitle">
                     Kelola dan pantau penggunaan ruangan dengan mudah. Akses real-time, 
                     booking otomatis, dan kontrol penuh dalam satu platform.
@@ -519,7 +519,7 @@
         <div class="login-panel">
             <div class="login-card slide-in-right">
                 <div class="login-header">
-                    <h1 class="login-title">Masuk ke Dasher</h1>
+                    <h1 class="login-title">Masuk ke JTIK ROOM'S</h1>
                     <p class="login-subtitle">Silakan masuk untuk mengakses dashboard</p>
                 </div>
 

@@ -52,10 +52,35 @@
             <input type="text" name="dosen" class="form-control" placeholder="Contoh: Dr. Ahmad, M.Kom" required value="{{ old('dosen') }}">
         </div>
 
+        <!-- Waktu Mulai -->
+        <div class="mb-3">
+            <label class="form-label">Waktu Mulai <span class="text-danger">*</span></label>
+            <input type="datetime-local" 
+                   name="waktu_mulai" 
+                   class="form-control" 
+                   id="waktu_mulai"
+                   min="{{ now()->timezone('Asia/Makassar')->format('Y-m-d\TH:i') }}"
+                   required 
+                   value="{{ old('waktu_mulai') }}">
+            <small class="text-muted">
+                <i class="fas fa-info-circle"></i> 
+                Pilih kapan booking dimulai (tidak boleh waktu yang sudah lewat)
+            </small>
+        </div>
+
+        <!-- Waktu Berakhir -->
         <div class="mb-3">
             <label class="form-label">Waktu Berakhir <span class="text-danger">*</span></label>
-            <input type="datetime-local" name="waktu_berakhir" class="form-control" required value="{{ old('waktu_berakhir') }}">
-            <small class="text-muted">Pilih kapan booking berakhir (minimal 30 menit dari sekarang, maksimal 5 jam)</small>
+            <input type="datetime-local" 
+                   name="waktu_berakhir" 
+                   class="form-control" 
+                   id="waktu_berakhir"
+                   required 
+                   value="{{ old('waktu_berakhir') }}">
+            <small class="text-muted">
+                <i class="fas fa-info-circle"></i> 
+                Pilih kapan booking berakhir (minimal 30 menit setelah waktu mulai)
+            </small>
         </div>
 
         <div class="mb-3">
@@ -88,16 +113,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Set default value to current time + 1 hour (untuk user experience)
+    const waktuMulaiInput = document.getElementById('waktu_mulai');
+    const waktuBerakhirInput = document.getElementById('waktu_berakhir');
+
+    // Set minimal waktu mulai (sekarang)
     const now = new Date();
-    const defaultTime = new Date(now.getTime() + 60 * 60000); // 1 hour from now
-    
-    const waktuInput = document.querySelector('input[name="waktu_berakhir"]');
-    
-    // Set default value if no old value
-    if (!waktuInput.value) {
-        waktuInput.value = formatDateTimeLocal(defaultTime);
-    }
     
     function formatDateTimeLocal(date) {
         const year = date.getFullYear();
@@ -108,6 +128,47 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
+
+    // Set default waktu mulai (30 menit dari sekarang)
+    if (!waktuMulaiInput.value) {
+        const defaultMulai = new Date(now.getTime() + 30 * 60000);
+        waktuMulaiInput.value = formatDateTimeLocal(defaultMulai);
+    }
+
+    // Set default waktu berakhir (120 menit dari sekarang / 90 menit dari waktu mulai default)
+    if (!waktuBerakhirInput.value) {
+        const defaultBerakhir = new Date(now.getTime() + 120 * 60000);
+        waktuBerakhirInput.value = formatDateTimeLocal(defaultBerakhir);
+    }
+
+    // Update waktu berakhir minimal ketika waktu mulai berubah
+    waktuMulaiInput.addEventListener('change', function() {
+        const waktuMulai = new Date(this.value);
+        const minBerakhir = new Date(waktuMulai.getTime() + 30 * 60000);
+        
+        waktuBerakhirInput.min = formatDateTimeLocal(minBerakhir);
+        
+        // Jika waktu berakhir sekarang kurang dari waktu mulai + 30 menit, update otomatis
+        const waktuBerakhirSekarang = new Date(waktuBerakhirInput.value);
+        if (waktuBerakhirSekarang < minBerakhir) {
+            waktuBerakhirInput.value = formatDateTimeLocal(minBerakhir);
+        }
+    });
+
+    // Validasi waktu berakhir harus setelah waktu mulai + 30 menit
+    waktuBerakhirInput.addEventListener('change', function() {
+        const waktuMulai = new Date(waktuMulaiInput.value);
+        const waktuBerakhir = new Date(this.value);
+        const minBerakhir = new Date(waktuMulai.getTime() + 30 * 60000);
+        
+        if (waktuBerakhir < minBerakhir) {
+            alert('Waktu berakhir harus minimal 30 menit setelah waktu mulai!');
+            this.value = formatDateTimeLocal(minBerakhir);
+        }
+    });
+
+    // Trigger change event untuk set initial min value
+    waktuMulaiInput.dispatchEvent(new Event('change'));
 });
 </script>
 @endsection

@@ -4,15 +4,20 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/admin.css') }}" />
+<style>
+.luas-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+</style>
  
-
 @section('content')
-@php
-use App\Models\Booking;
-@endphp
-
 <div class="content-wrapper">
-    <!-- Header -->
     <div class="admin-header">
         <div class="header-content">
             <div class="header-text">
@@ -24,11 +29,6 @@ use App\Models\Booking;
                     <i class="fas fa-plus me-2"></i>Tambah Ruangan
                 </a>
             </div>
-        </div>
-        <div class="header-decoration">
-            <div class="decoration-circle circle-1"></div>
-            <div class="decoration-circle circle-2"></div>
-            <div class="decoration-circle circle-3"></div>
         </div>
     </div>
 
@@ -46,7 +46,6 @@ use App\Models\Booking;
         </div>
     @endif
 
-    <!-- Statistics -->
     <div class="stats-grid">
         <div class="stat-card primary">
             <div class="stat-icon">
@@ -101,7 +100,6 @@ use App\Models\Booking;
         </div>
     </div>
 
-    <!-- Rooms Table -->
     <div class="card">
         <div class="card-header">
             <h3><i class="fas fa-list me-2"></i>Daftar Ruangan</h3>
@@ -114,6 +112,7 @@ use App\Models\Booking;
                         <tr>
                             <th>Nama Ruangan</th>
                             <th>Kapasitas</th>
+                            <th>Luas</th>
                             <th>Fasilitas</th>
                             <th>Status</th>
                             <th>Lokasi</th>
@@ -135,6 +134,9 @@ use App\Models\Booking;
                             </td>
                             <td>
                                 <span class="capacity-badge">{{ $room->capacity }} orang</span>
+                            </td>
+                            <td>
+                                <span class="luas-badge">{{ $room->luas ?? '0' }} m²</span>
                             </td>
                             <td>
                                 @if($room->facilities && count($room->facilities) > 0)
@@ -163,19 +165,14 @@ use App\Models\Booking;
                                 <span class="location-text">{{ $room->location ?? 'Gedung JTIK' }}</span>
                             </td>
                             <td>
-                                @if($room->qr_code)
-                                    <div class="qr-code-preview">
-                                        <img src="{{ $room->qr_code }}" alt="QR Code {{ $room->name }}" 
-                                             class="qr-image" style="max-width: 60px; height: auto;">
-                                        <div class="qr-actions">
-                                            <a href="{{ $room->qr_code }}" download="qr-{{ $room->name }}.png" 
-                                               class="btn-download-qr" title="Download QR">
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                        </div>
+                                @if($room->qr_code && file_exists(public_path($room->qr_code)))
+                                    <div class="qr-preview">
+                                        <a href="{{ asset($room->qr_code) }}" download="QR-{{ $room->name }}.png" title="Download QR">
+                                            <img src="{{ asset($room->qr_code) }}" class="qr-thumbnail" alt="QR">
+                                        </a>
                                     </div>
                                 @else
-                                    <span class="text-muted">-</span>
+                                    <span class="text-muted small">-</span>
                                 @endif
                             </td>
                             <td>
@@ -203,7 +200,7 @@ use App\Models\Booking;
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                                 <div class="empty-state">
                                     <div class="empty-icon">
                                         <i class="fas fa-door-open fa-3x"></i>
@@ -223,207 +220,6 @@ use App\Models\Booking;
         </div>
     </div>
 </div>
-
-<style>
-/* Hanya style tambahan untuk table dan komponen spesifik */
-/* Hapus style stat-card karena sudah ada di admin.css */
-
-.room-info {
-    line-height: 1.4;
-}
-
-.room-name {
-    display: block;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.room-code {
-    font-size: 0.8rem;
-}
-
-.room-desc {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin: 0.25rem 0 0 0;
-}
-
-.capacity-badge {
-    background: #dbeafe;
-    color: #1e40af;
-    padding: 0.3rem 0.6rem;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.facilities-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    max-width: 200px;
-}
-
-.facility-tag {
-    background: #f1f5f9;
-    color: #475569;
-    padding: 0.2rem 0.5rem;
-    border-radius: 6px;
-    font-size: 0.7rem;
-    white-space: nowrap;
-}
-
-.facility-tag-more {
-    background: #e2e8f0;
-    color: #64748b;
-    padding: 0.2rem 0.5rem;
-    border-radius: 6px;
-    font-size: 0.7rem;
-}
-
-.status-badge {
-    padding: 0.3rem 0.8rem;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.status-badge.available {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.status-badge.maintenance {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-badge.occupied {
-    background: #fecaca;
-    color: #dc2626;
-}
-
-.location-text {
-    color: #64748b;
-    font-size: 0.9rem;
-}
-
-.qr-code-preview {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.qr-image {
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.btn-download-qr {
-    color: #64748b;
-    text-decoration: none;
-    padding: 0.3rem;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
-
-.btn-download-qr:hover {
-    color: #3b82f6;
-    background: #f1f5f9;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 0.3rem;
-}
-
-.btn-action {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-view {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.btn-view:hover {
-    background: #3b82f6;
-    color: white;
-}
-
-.btn-edit {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.btn-edit:hover {
-    background: #f59e0b;
-    color: white;
-}
-
-.btn-delete {
-    background: #fecaca;
-    color: #dc2626;
-}
-
-.btn-delete:hover {
-    background: #ef4444;
-    color: white;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 2rem;
-}
-
-.empty-icon {
-    color: #cbd5e1;
-    margin-bottom: 1rem;
-}
-
-.empty-state h4 {
-    color: #475569;
-    margin-bottom: 0.5rem;
-}
-
-/* Table improvements */
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: #475569;
-    background: #f8fafc;
-    padding: 1rem 0.75rem;
-}
-
-.table td {
-    vertical-align: middle;
-    padding: 1rem 0.75rem;
-    border-color: #f1f5f9;
-}
-
-.table tbody tr:hover {
-    background: #f8fafc;
-}
-
-/* Tambahan untuk stat-card danger jika masih perlu penyesuaian */
-.stat-card.danger .stat-icon {
-    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-}
-
-.stat-card.danger::before {
-    background: linear-gradient(90deg, #ef4444, #dc2626) !important;
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

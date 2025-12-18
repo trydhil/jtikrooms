@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\Kelas;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -17,6 +16,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        // 1. Validasi Input
         $credentials = $request->validate([
             'username' => 'required',
             'password' => 'required'
@@ -25,80 +25,67 @@ class AuthController extends Controller
         $username = $credentials['username'];
         $password = $credentials['password'];
 
-        // DEBUG: Log credentials
-        \Log::info('Login attempt:', ['username' => $username, 'password_input' => $password]);
+        // Log Debugging
+        Log::info('Login attempt:', ['username' => $username]);
 
-        // Cek di tabel admin
-        $admin = Admin::where('username', $username)
-            ->where('password', $password)
-            ->first();
+        // 2. Cek di tabel ADMIN
+        // (Password Plain Text sesuai request kamu)
+        $admin = Admin::where('username', $username)->first();
 
-        // DEBUG: Log admin check
-        \Log::info('Admin check:', ['found' => !is_null($admin), 'admin_data' => $admin]);
-
-        if ($admin) {
-            // SIMPAN SESSION
-            session([
-                'loggedin' => true,
-                'user' => $username,
-                'role' => 'admin',
-                'user_id' => $admin->id
-            ]);
-
-            $request->session()->regenerate();
-            \Log::info('Session after admin login:', session()->all());
-
-            // TAMBAHKAN SESSION FLASH UNTUK ANIMASI - DENGAN WAKTU INDONESIA
-            session()->flash('login_success', true);
-            session()->flash('user_name', $username);
-            session()->flash('user_role', 'admin');
-            session()->flash('login_time', now()->timezone('Asia/Makassar')->format('H:i'));
-            session()->flash('login_date', now()->timezone('Asia/Makassar')->translatedFormat('l, d F Y'));
-
+        if ($admin && $admin->password === $password) {
+            Log::info('Admin login success');
+            // Panggil Helper (Biar kodingan bersih)
+            $this->setSession($username, 'admin', $admin->id);
             return redirect()->route('dashboard.admin')->with('success', 'Login admin berhasil!');
         }
 
-        // Cek di tabel kelas
-        $kelas = Kelas::where('username', $username)
-            ->where('password', $password)
-            ->first();
+        // 3. Cek di tabel KELAS
+        $kelas = Kelas::where('username', $username)->first();
 
-        // DEBUG: Log kelas check
-        \Log::info('Kelas check:', ['found' => !is_null($kelas), 'kelas_data' => $kelas]);
-
-        if ($kelas) {
-            // SIMPAN SESSION
-            session([
-                'loggedin' => true,
-                'user' => $username,
-                'role' => 'kelas', 
-                'user_id' => $kelas->id
-            ]);
-
-            $request->session()->regenerate();
-            \Log::info('Session after kelas login:', session()->all());
-
-            // TAMBAHKAN SESSION FLASH UNTUK ANIMASI - DENGAN WAKTU INDONESIA
-            session()->flash('login_success', true);
-            session()->flash('user_name', $username);
-            session()->flash('user_role', 'kelas');
-            session()->flash('login_time', now()->timezone('Asia/Makassar')->format('H:i'));
-            session()->flash('login_date', now()->timezone('Asia/Makassar')->translatedFormat('l, d F Y'));
-
+        if ($kelas && $kelas->password === $password) {
+            Log::info('Kelas login success');
+            // Panggil Helper (Biar kodingan bersih)
+            $this->setSession($username, 'kelas', $kelas->id);
             return redirect()->route('dashboard.kelas')->with('success', 'Login kelas berhasil!');
         }
 
-        // DEBUG: Log failed login
-        \Log::warning('Login failed for username: ' . $username);
-
+        // 4. Login Gagal
+        Log::warning('Login failed for: ' . $username);
         return back()->withErrors([
             'username' => 'Username atau password salah.',
         ]);
     }
 
+    /**
+     * Helper Function: Mengatur Session & Flash Data
+     * (Ini yang bikin kodingan jadi pendek & rapi)
+     */
+    private function setSession($username, $role, $id)
+    {
+        // 1. Simpan Session Utama
+        session([
+            'loggedin' => true,
+            'user' => $username,
+            'role' => $role,
+            'user_id' => $id
+        ]);
+
+        session()->regenerate();
+
+        // 2. Simpan Flash Data (Untuk Animasi Frontend & Pesan Welcome)
+        session()->flash('login_success', true);
+        session()->flash('user_name', $username);
+        session()->flash('user_role', $role);
+        // Timezone Makassar (WITA)
+        session()->flash('login_time', now()->timezone('Asia/Makassar')->format('H:i'));
+        session()->flash('login_date', now()->timezone('Asia/Makassar')->translatedFormat('l, d F Y'));
+        
+        Log::info("Session created for $role: $username");
+    }
+
     public function logout(Request $request)
     {
-        \Log::info('Logout:', session()->all());
+        Log::info('Logout user:', ['user' => session('user')]);
         
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -113,7 +100,6 @@ class AuthController extends Controller
             'user' => session('user', ''),
             'role' => session('role', ''),
             'user_id' => session('user_id', ''),
-            'session_id' => session()->getId()
         ]);
     }
 }

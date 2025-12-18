@@ -4,11 +4,9 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/admin.css') }}" />
-
-
+ 
 @section('content')
 <div class="content-wrapper">
-    <!-- Header -->
     <div class="admin-header">
         <div class="header-content">
             <div class="header-text">
@@ -24,16 +22,9 @@
                 </a>
             </div>
         </div>
-        <div class="header-decoration">
-            <div class="decoration-circle circle-1"></div>
-            <div class="decoration-circle circle-2"></div>
-            <div class="decoration-circle circle-3"></div>
-        </div>
     </div>
 
-    <!-- Content Grid -->
     <div class="content-grid">
-        <!-- Left Column - Room Details -->
         <div class="content-column">
             <div class="card">
                 <div class="card-header">
@@ -43,7 +34,7 @@
                 <div class="card-body">
                     <div class="detail-grid">
                         <div class="detail-item">
-                            <label class="detail-label">Nama Ruangan</label>
+                            <label class="detail-label">Kode Ruangan</label>
                             <span class="detail-value">{{ $room->name }}</span>
                         </div>
                         
@@ -56,10 +47,33 @@
                             <label class="detail-label">Lokasi</label>
                             <span class="detail-value">{{ $room->location ?? 'Gedung JTIK' }}</span>
                         </div>
+
+                        <div class="detail-item">
+                            <label class="detail-label">Lantai</label>
+                            <span class="detail-value">{{ $room->lantai ?? '-' }}</span>
+                        </div>
                         
                         <div class="detail-item">
                             <label class="detail-label">Kapasitas</label>
                             <span class="detail-value">{{ $room->capacity ? $room->capacity . ' orang' : '-' }}</span>
+                        </div>
+
+                        <div class="detail-item">
+                            <label class="detail-label">Luas Ruangan</label>
+                            <span class="detail-value">{{ $room->luas ? $room->luas . ' m²' : '-' }}</span>
+                        </div>
+
+                        <div class="detail-item">
+                            <label class="detail-label">Tipe Ruangan</label>
+                            <span class="detail-value">
+                                @if($room->type === 'lab') 
+                                    <span class="badge bg-info">Laboratorium</span>
+                                @elseif($room->type === 'kelas')
+                                    <span class="badge bg-primary">Kelas / Teori</span>
+                                @else
+                                    <span class="badge bg-secondary">Ruangan Lainnya</span>
+                                @endif
+                            </span>
                         </div>
                         
                         <div class="detail-item">
@@ -101,9 +115,7 @@
             </div>
         </div>
 
-        <!-- Right Column - QR Code & Info -->
         <div class="content-column">
-            <!-- QR Code Card -->
             <div class="card">
                 <div class="card-header">
                     <h3><i class="fas fa-qrcode me-2"></i>QR Code</h3>
@@ -114,13 +126,20 @@
                     @endif
                 </div>
                 <div class="card-body text-center">
-                    @if($room->qr_code)
-                        <img src="{{ $room->qr_code }}" alt="QR Code {{ $room->name }}" 
-                             class="qr-image mb-3" style="max-width: 200px; border-radius: 10px;">
+                    @if($room->qr_code && file_exists(public_path($room->qr_code)))
+                        <img src="{{ asset($room->qr_code) }}" 
+                             alt="QR Code {{ $room->name }}" 
+                             class="qr-image mb-3" 
+                             style="max-width: 200px; border-radius: 10px; border: 1px solid #e2e8f0;">
+
                         <div class="d-grid gap-2">
-                            <a href="{{ $room->qr_code }}" download="qr-{{ $room->name }}.png" 
+                            <a href="{{ asset($room->qr_code) }}" 
+                               download="QR-{{ $room->name }}.png" 
                                class="btn btn-primary">
                                 <i class="fas fa-download me-2"></i>Download QR Code
+                            </a>
+                            <a href="{{ route('rooms.print', $room->id) }}" class="btn btn-outline-danger" target="_blank">
+                                <i class="fas fa-file-pdf me-2"></i>Cetak Label PDF
                             </a>
                         </div>
                     @else
@@ -130,15 +149,18 @@
                             </div>
                             <h5 class="text-muted">QR Code Belum Tersedia</h5>
                             <p class="text-muted small mb-3">Generate QR code untuk ruangan ini</p>
-                            <a href="{{ route('rooms.generate-qr', $room->id) }}" class="btn btn-primary">
-                                <i class="fas fa-plus me-2"></i>Generate QR Code
-                            </a>
+                            
+                            <form action="{{ route('rooms.generate-qr', $room->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-magic me-2"></i>Generate QR Code
+                                </button>
+                            </form>
                         </div>
                     @endif
                 </div>
             </div>
 
-            <!-- Info Card -->
             <div class="card">
                 <div class="card-header">
                     <h3><i class="fas fa-history me-2"></i>Informasi Sistem</h3>

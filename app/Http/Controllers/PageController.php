@@ -4,43 +4,66 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Room;
+use App\Models\Booking;
+use App\Models\Comment;
+use App\Models\Queue; // ✅ TAMBAH INI!
+use Carbon\Carbon;
 
 class PageController extends Controller
 {
-    public function index()
-    {
-        return view('index'); // ✅ PERBAIKI DI SINI
+   public function index()
+{
+    // Menggunakan scope optimization agar query database ringan (Hanya 3 query)
+    $rooms = Room::withAvailability()->get();
+
+    // Mengirimkan variabel $rooms ke view index
+    return view('index', compact('rooms'));
+}
+    public function roomInfo($name)
+{
+    // Decode nama ruangan dari URL
+    $roomName = urldecode($name);
+    
+    // Cari ruangan di database dengan booking aktif dan komentar
+    $room = Room::where('name', $roomName)
+                ->with(['comments' => function($query) {
+                    $query->where('status', 'open')
+                          ->orderBy('created_at', 'desc')
+                          ->take(5);
+                }])
+                ->first();
+    
+    if (!$room) {
+        // ... data dummy (jika ada)
+        abort(404, 'Ruangan tidak ditemukan');
     }
 
-    public function roomInfo($name)
-    {
-        // Decode nama ruangan dari URL
-        $roomName = urldecode($name);
+    // Hitung booking aktif untuk ruangan ini
+    $activeBookingsCount = Booking::where('room_name', $roomName)
+        ->where('status', 'active')
+        ->where('waktu_berakhir', '>', now()->timezone('Asia/Makassar'))
+        ->count();
+
+    // Cari booking yang sedang berlangsung
+    $activeBooking = Booking::where('room_name', $roomName)
+        ->where('status', 'active')
+        ->where('waktu_mulai', '<=', now()->timezone('Asia/Makassar'))
+        ->where('waktu_berakhir', '>', now()->timezone('Asia/Makassar'))
+        ->first();
         
-        // Cari ruangan di database
-        $room = Room::where('name', $roomName)->first();
+    // Hitung antrian hari ini (jika masih perlu)
+    $todayQueues = Queue::where('room_id', $room->id)
+        ->whereDate('created_at', Carbon::today())
+        ->count();
         
-        // Jika tidak ditemukan, buat data dummy untuk testing
-        if (!$room) {
-            $room = new Room();
-            $room->name = $roomName;
-            $room->display_name = $roomName . ' - Ruang Kelas';
-            $room->location = 'Gedung JTIK';
-            $room->description = 'Ruangan kelas dengan fasilitas lengkap untuk pembelajaran';
-            $room->capacity = 40;
-            $room->status = 'available';
-            $room->facilities = ['AC', 'Proyektor', 'Whiteboard', 'WiFi', 'Kursi Ergonomis'];
-        }
-        
-        // Kirim data ke view
-        return view('room.info', compact('room'));
-    }
+    return view('room.info', compact('room', 'activeBooking', 'activeBookingsCount', 'todayQueues'));
+}
 
     public function about()
     {
         return view('about');
     }
-     // ✅ TAMBAH METHOD INI
+    
     public function informasi()
     {
         return view('informasi');

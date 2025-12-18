@@ -11,14 +11,15 @@ class Kelas extends Model
 
     protected $table = 'kelas';
 
-// app/Models/Kelas.php
-protected $fillable = [
-    'username', 
-    'password',  // Sekarang plain text atau bcrypt
-    'nama_kelas',
-    'angkatan', 
-    'prodi'
-];
+    protected $fillable = [
+        'username', 
+        'password',
+        'nama_kelas',
+        'kelas', // TAMBAH INI
+        'angkatan', 
+        'prodi'
+    ];
+
     public $timestamps = true;
 
     // Accessor untuk menampilkan nama lengkap
@@ -38,7 +39,7 @@ protected $fillable = [
     {
         return \App\Models\Booking::where('username', $this->username)
             ->where('status', 'active')
-            ->where('waktu_berakhir', '>', now())
+            ->where('waktu_berakhir', '>', now()->timezone('Asia/Makassar'))
             ->first();
     }
 
@@ -47,7 +48,7 @@ protected $fillable = [
     {
         return \App\Models\Booking::where('username', $this->username)
             ->where('status', 'active')
-            ->where('waktu_berakhir', '>', now())
+            ->where('waktu_berakhir', '>', now()->timezone('Asia/Makassar'))
             ->exists();
     }
 }

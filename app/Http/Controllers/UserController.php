@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Kelas;
+use App\Models\Booking;
 
 class UserController extends Controller
 {
     public function __construct()
     {
+        // Middleware: Cuma admin yang boleh masuk sini
         $this->middleware(function ($request, $next) {
             if (!session('loggedin') || session('role') !== 'admin') {
                 return redirect()->route('login')->with('error', 'Akses admin required.');
@@ -17,18 +19,20 @@ class UserController extends Controller
         });
     }
 
+    // 1. INDEX (List User)
     public function index()
     {
         $users = Kelas::orderBy('username')->get();
-        \Log::info('Index method - Users data:', $users->toArray());
         return view('admin.users.index', compact('users'));
     }
 
+    // 2. CREATE (Form Tambah)
     public function create()
     {
         return view('admin.users.create');
     }
 
+    // 3. STORE (Simpan User Baru)
     public function store(Request $request)
     {
         $request->validate([
@@ -39,6 +43,7 @@ class UserController extends Controller
         ]);
 
         try {
+            // Bikin username otomatis (contoh: teknikkomputer2023)
             $username = strtolower($request->prodi) . strtolower($request->kelas) . substr($request->angkatan, -2);
             
             Kelas::create([
@@ -47,38 +52,36 @@ class UserController extends Controller
                 'kelas' => $request->kelas,
                 'nama_kelas' => $request->prodi . ' ' . $request->kelas,
                 'angkatan' => $request->angkatan,
-                'password' => $request->password // TANPA MD5
+                'password' => $request->password // Password Biasa (Tanpa Hash)
             ]);
 
             return redirect()->route('users.index')
-                ->with('success', 'Perwakilan kelas berhasil ditambahkan!');
+                ->with('success', 'User berhasil ditambah! Username: ' . $username);
 
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Gagal menambah perwakilan kelas: ' . $e->getMessage())
-                ->withInput();
+            return redirect()->back()->with('error', 'Gagal: ' . $e->getMessage())->withInput();
         }
     }
 
-    public function show(Kelas $user) // UBAH PARAMETER JADI $user
+    // 4. SHOW (Detail User) - INI YANG TADI HILANG
+    public function show(Kelas $user)
     {
         return view('admin.users.show', compact('user'));
     }
 
-    public function edit(Kelas $user) // UBAH PARAMETER JADI $user
+    // 5. EDIT (Form Edit) - INI YANG TADI HILANG DAN BIKIN ERROR
+    public function edit(Kelas $user)
     {
-        return view('admin.users.edit', ['user' => $user]);
+        return view('admin.users.edit', compact('user'));
     }
 
-    public function update(Request $request, Kelas $user) // UBAH PARAMETER JADI $user
+    // 6. UPDATE (Simpan Perubahan)
+    public function update(Request $request, Kelas $user)
     {
-        \Log::info('Update attempt:', $request->all());
-        \Log::info('Current user data:', $user->toArray());
-
         $request->validate([
-            'prodi' => 'required|string|max:50',
-            'kelas' => 'required|string|max:10',
-            'angkatan' => 'required|max:10',
+            'prodi' => 'required',
+            'kelas' => 'required',
+            'angkatan' => 'required',
             'password' => 'nullable|min:6'
         ]);
 
@@ -93,64 +96,52 @@ class UserController extends Controller
                 'username' => $newUsername
             ];
 
-            if ($request->password) {
-                $updateData['password'] = $request->password; // TANPA MD5
+            // Cek kalau password diisi, update passwordnya
+            if ($request->filled('password')) {
+                $updateData['password'] = $request->password; // Update tanpa hash
             }
 
-            \Log::info('Data to update:', $updateData);
-            
             $user->update($updateData);
 
-            \Log::info('Update successful - New data:', $user->fresh()->toArray());
-
-            return redirect()->route('users.index')
-                ->with('success', 'Perwakilan kelas berhasil diupdate!');
+            return redirect()->route('users.index')->with('success', 'Data berhasil diupdate!');
 
         } catch (\Exception $e) {
-            \Log::error('Update failed:', ['error' => $e->getMessage()]);
-            return redirect()->back()
-                ->with('error', 'Gagal mengupdate perwakilan kelas: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', 'Gagal update: ' . $e->getMessage());
         }
     }
 
-    public function destroy(Kelas $user) // UBAH PARAMETER JADI $user
+    // 7. RESET PASSWORD
+    public function resetPassword(Kelas $user)
     {
         try {
-            $activeBookings = \App\Models\Booking::where('username', $user->username)
-                ->where('status', 'active')
-                ->where('waktu_berakhir', '>', now())
-                ->count();
-
-            if ($activeBookings > 0) {
-                return redirect()->back()
-                    ->with('error', 'Tidak dapat menghapus perwakilan kelas yang memiliki booking aktif!');
-            }
-
-            $user->delete();
-
-            return redirect()->route('users.index')
-                ->with('success', 'Perwakilan kelas berhasil dihapus!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Gagal menghapus perwakilan kelas: ' . $e->getMessage());
-        }
-    }
-
-    public function resetPassword(Kelas $user) // UBAH PARAMETER JADI $user
-    {
-        try {
+            $defaultPass = 'password123';
+            
             $user->update([
-                'password' => 'password123' // TANPA MD5
+                'password' => $defaultPass
             ]);
 
             return redirect()->route('users.index')
-                ->with('success', 'Password berhasil direset ke: password123');
+                ->with('success', "Password {$user->username} direset jadi: $defaultPass");
 
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Gagal reset password: ' . $e->getMessage());
+            return back()->with('error', 'Gagal reset password.');
         }
+    }
+
+    // 8. DESTROY (Hapus User)
+    public function destroy(Kelas $user)
+    {
+        // Cek dulu user ini punya booking aktif gak?
+        $activeBookings = Booking::where('username', $user->username)
+            ->where('status', 'active')
+            ->where('waktu_berakhir', '>', now())
+            ->exists();
+
+        if ($activeBookings) {
+            return back()->with('error', 'User ini sedang meminjam ruangan, tidak bisa dihapus!');
+        }
+
+        $user->delete();
+        return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
     }
 }

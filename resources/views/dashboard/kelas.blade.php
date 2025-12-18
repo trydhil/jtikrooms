@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Kelas - Dasher')
+@section('title', 'Dashboard Kelas - JTIK ROOMS')
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/kelas.css') }}">
@@ -118,15 +118,29 @@
     use App\Models\Booking;
     use Carbon\Carbon;
     
+    // Set Timezone
+    $now = now()->timezone('Asia/Makassar');
+    $startOfWeek = $now->copy()->startOfWeek(); // Senin jam 00:00 minggu ini
+    $endOfWeek = $now->copy()->endOfWeek();     // Minggu jam 23:59 minggu ini
+
+    // 1. Booking Aktif (Realtime)
     $activeBookings = Booking::where('username', session('user'))
         ->where('status', 'active')
-        ->where('waktu_berakhir', '>', now())
+        ->where('waktu_berakhir', '>', $now)
         ->orderBy('waktu_berakhir')
         ->get();
         
-    $totalBookings = Booking::where('username', session('user'))->count();
+    // 2. Total Booking (RESET MINGGUAN)
+    // Logic: Hanya menghitung booking yang dibuat antara Senin - Minggu ini
+    $totalBookings = Booking::where('username', session('user'))
+        ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+        ->count();
+
+    // 3. Booking Selesai (RESET MINGGUAN)
+    // Logic: Hanya menghitung booking selesai minggu ini
     $completedBookings = Booking::where('username', session('user'))
         ->where('status', 'completed')
+        ->whereBetween('updated_at', [$startOfWeek, $endOfWeek])
         ->count();
 @endphp
 
@@ -136,9 +150,6 @@
         <h2><i class="fas fa-chalkboard me-2"></i>Dashboard Kelas</h2>
         <div class="user-info">
             
-            <div class="user-avatar-small">
-                <i class="fas fa-user"></i>
-            </div>
         </div>
     </div>
 
@@ -151,8 +162,6 @@
                     <p style="color: rgba(255,255,255,0.9); margin-bottom: 2rem; font-size: 1.1rem;">
                         Kelola booking ruangan dengan mudah. Gunakan fitur scan QR code untuk booking ruangan secara instan.
                     </p>
-                    
-                  
                 </div>
             </div>
             <div class="col-md-4">
@@ -192,23 +201,25 @@
             </div>
         </div>
         
+        <!-- Ubah Label jadi Booking Minggu Ini -->
         <div class="stat-card-kelas">
             <div class="stat-icon-kelas">
-                <i class="fas fa-history"></i>
+                <i class="fas fa-calendar-week"></i>
             </div>
             <div class="stat-content-kelas">
                 <span class="stat-number-kelas">{{ $totalBookings }}</span>
-                <span class="stat-label-kelas">Total Booking</span>
+                <span class="stat-label-kelas">Booking Minggu Ini</span>
             </div>
         </div>
         
+        <!-- Selesai Minggu Ini -->
         <div class="stat-card-kelas">
             <div class="stat-icon-kelas">
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="stat-content-kelas">
                 <span class="stat-number-kelas">{{ $completedBookings }}</span>
-                <span class="stat-label-kelas">Selesai</span>
+                <span class="stat-label-kelas">Selesai (Mingguan)</span>
             </div>
         </div>
     </div>
@@ -224,8 +235,11 @@
             @if($activeBookings->count() > 0)
                 @foreach($activeBookings as $booking)
                 @php
-                    $timeLeft = $booking->waktu_berakhir->diffInMinutes(now());
-                    $isAlmostOver = $timeLeft <= 15;
+                    $waktuBerakhir = $booking->waktu_berakhir->timezone('Asia/Makassar');
+                    $sekarang = now()->timezone('Asia/Makassar');
+                    $timeLeft = $waktuBerakhir->diffInMinutes($sekarang, false); // false agar negatif jika lewat
+                    // Perbaikan logika hampir habis (misal 15 menit)
+                    $isAlmostOver = ($timeLeft > 0 && $timeLeft <= 15);
                 @endphp
                 <div class="booking-card {{ $isAlmostOver ? 'pulse' : '' }}">
                     <div class="booking-header">
@@ -237,7 +251,7 @@
                         </div>
                         <div class="countdown-timer">
                             <i class="fas fa-hourglass-half"></i>
-                            {{ $booking->waktu_berakhir->format('H:i') }}
+                            {{ $waktuBerakhir->format('H:i') }} WITA
                         </div>
                     </div>
                     
@@ -260,7 +274,7 @@
                             <i class="fas fa-clock"></i>
                             <div>
                                 <strong>Sisa Waktu</strong>
-                                <div>{{ $booking->waktu_berakhir->diffForHumans() }}</div>
+                                <div>{{ $waktuBerakhir->diffForHumans($sekarang) }}</div>
                             </div>
                         </div>
                     </div>
@@ -358,3 +372,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+```
+

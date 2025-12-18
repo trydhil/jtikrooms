@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>@yield('title', 'Dasher - Dashboard Ruangan')</title>
+    <title>@yield('title', 'JTIK ROOM'S - Dashboard Ruangan')</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     
     <!-- Animations CSS -->
     <link rel="stylesheet" href="{{ asset('css/animations.css') }}" />
-    
+    <link rel="stylesheet" href="{{ asset('css/theme.css') }}">
     <!-- Mobile Specific Meta Tags -->
     <meta name="theme-color" content="#2c5aa0" />
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,7 +33,7 @@
             <div class="mobile-brand">
                 <img src="{{ asset('img/logo1.png') }}" alt="Logo" class="mobile-logo" 
                      onerror="this.style.display='none';" />
-                <span class="mobile-title">Dasher</span>
+                <span class="mobile-title">JTIK ROOM'S</span>
             </div>
             <div class="mobile-user">
                 @if(session('loggedin'))
@@ -67,7 +67,7 @@
             <li>
                 <a href="{{ route('home') }}" class="{{ request()->is('/') ? 'active' : '' }}">
                     <i class="fas fa-th-list"></i>
-                    <span>Room List</span>
+                    <span>Ruangan</span>
                 </a>
             </li>
 
@@ -99,14 +99,6 @@
                         <span>Kelas</span>
                     </a>
                 @endif
-            </li>
-
-            <!-- About - Always accessible -->
-            <li>
-                <a href="{{ route('about') }}" class="{{ request()->is('about') ? 'active' : '' }}">
-                    <i class="fas fa-info-circle"></i>
-                    <span>About</span>
-                </a>
             </li>
 
             <!-- Informasi - Always accessible --> 
@@ -153,24 +145,45 @@
     <!-- Access Denied Modal -->
     <div class="modal fade" id="accessAlertModal" tabindex="-1" aria-labelledby="accessAlertLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title" id="accessAlertLabel">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Akses Ditolak
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center py-4">
-                    <div class="mb-3">
-                        <i class="fas fa-lock fa-3x text-warning"></i>
+            <div class="modal-content access-denied-modal">
+                <!-- Header dengan Icon & Judul -->
+                <div class="modal-header access-denied-header">
+                    <div class="access-denied-icon">
+                        <i class="fas fa-lock"></i>
                     </div>
-                    <h6 class="fw-bold" id="accessMessage"></h6>
-                    <p class="text-muted mt-2">Silakan login dengan akun yang sesuai untuk mengakses fitur ini.</p>
+                    <h5 class="modal-title" id="accessAlertLabel">Akses Ditolak</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <a href="{{ route('login') }}" class="btn btn-warning">
-                        <i class="fas fa-sign-in-alt me-2"></i>Login Sekarang
+
+                <!-- Body dengan Pesan -->
+                <div class="modal-body access-denied-body">
+                    <div class="access-denied-message">
+                        <p class="access-denied-text">
+                            Maaf, Anda tidak memiliki izin untuk mengakses bagian ini.
+                        </p>
+
+                        <div class="access-denied-role" id="accessDeniedRole">
+                            <strong>Role Anda:</strong> <span id="userRoleDisplay">-</span>
+                        </div>
+
+                        <div class="access-denied-note">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                                    Jika Anda merasa ini adalah kesalahan, silakan hubungi administrator untuk mendapatkan akses yang sesuai.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer dengan Tombol -->
+                <div class="modal-footer access-denied-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Tutup
+                    </button>
+                    <a href="{{ route('home') }}" class="btn" style="background: linear-gradient(90deg, var(--biru-medium) 0%, var(--oranye) 100%); color: white; border: none;">
+                        <i class="fas fa-home me-2"></i>Kembali ke Home
                     </a>
                 </div>
             </div>
@@ -178,162 +191,122 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ asset('js/script.js') }}"></script>
-    <script src="{{ asset('js/animations.js') }}"></script>
-    
-    <script>
-        // Mobile Sidebar Toggle
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebarClose = document.getElementById('sidebarClose');
-        const mobileOverlay = document.getElementById('mobileOverlay');
-        const mainContent = document.getElementById('mainContent');
+<script src="{{ asset('js/script.js') }}"></script>
+<script src="{{ asset('js/animations.js') }}"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-        function toggleSidebar() {
+<script>
+    /**
+     * JTIKRooms Main JavaScript
+     * Version: Optimized for Laravel 12 & Alpine.js
+     */
+
+    // 1. Inisialisasi Alpine.js untuk Interaksi Kartu Ruangan
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('roomCard', () => ({
+            isHovered: false,
+            isBooking: false,
+            
+            async checkAvailability(roomName) {
+                this.isBooking = true;
+                try {
+                    // Cek status ruangan secara real-time ke API
+                    const response = await fetch(`/api/room/${roomName}/status`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.data.status === 'available') {
+                            window.location.href = `/room/${roomName}`;
+                        } else {
+                            this.showStatusModal(data.data);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Fetch Error:', error);
+                } finally {
+                    this.isBooking = false;
+                }
+            },
+            
+            showStatusModal(data) {
+                // Menampilkan alert sederhana, bisa diganti dengan Modal Bootstrap jika perlu
+                alert(`Ruangan ${data.room_name} saat ini ${data.status}.\nDigunakan untuk: ${data.mata_kuliah || '-'}`);
+            }
+        }));
+    });
+
+    // 2. Logika Sidebar & Mobile Navigation
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarClose = document.getElementById('sidebarClose');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    function toggleSidebar() {
+        if (sidebar && mobileOverlay) {
             sidebar.classList.toggle('active');
             mobileOverlay.classList.toggle('active');
             document.body.classList.toggle('sidebar-open');
         }
+    }
 
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', toggleSidebar);
+    // Event Listeners untuk Sidebar
+    if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+    if (sidebarClose) sidebarClose.addEventListener('click', toggleSidebar);
+    if (mobileOverlay) mobileOverlay.addEventListener('click', toggleSidebar);
+
+    // 3. Touch Swipe untuk Mobile UX (Buka/Tutup Sidebar dengan Geser)
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+    document.addEventListener('touchend', e => { 
+        touchEndX = e.changedTouches[0].screenX; 
+        handleSwipe();
+    }, {passive: true});
+
+    function handleSwipe() {
+        const threshold = 100;
+        const dist = touchEndX - touchStartX;
+        
+        if (Math.abs(dist) > threshold) {
+            if (dist > 0 && touchStartX < 40) toggleSidebar(); // Swipe kanan (buka)
+            if (dist < 0 && sidebar.classList.contains('active')) toggleSidebar(); // Swipe kiri (tutup)
         }
+    }
 
-        if (sidebarClose) {
-            sidebarClose.addEventListener('click', toggleSidebar);
+    // 4. Handle Window Resize & Orientation
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 992 && sidebar && sidebar.classList.contains('active')) {
+            toggleSidebar();
         }
+    });
 
-        if (mobileOverlay) {
-            mobileOverlay.addEventListener('click', toggleSidebar);
-        }
+    // 5. Pencegahan Zoom Berlebih di iOS
+    document.addEventListener('touchend', (event) => {
+        const now = (new Date()).getTime();
+        if (now - (window.lastTouchEnd || 0) <= 300) event.preventDefault();
+        window.lastTouchEnd = now;
+    }, false);
 
-        // Close sidebar when clicking on menu items (mobile)
-        const menuItems = document.querySelectorAll('.sidebar-menu a');
-        menuItems.forEach(item => {
-            item.addEventListener('click', () => {
-                if (window.innerWidth < 992) {
-                    toggleSidebar();
-                }
-            });
+    // 6. Notifikasi Login (Laravel Session)
+    @if(session('login_success'))
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Login sukses: Memberikan efek highlight pada menu.");
+            // Logika tambahan untuk highlight menu jika diperlukan
         });
+    @endif
 
-        // Touch swipe for mobile
-        let touchStartX = 0;
-        let touchEndX = 0;
-
-        document.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-
-        document.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        });
-
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const swipeDistance = touchEndX - touchStartX;
-
-            if (Math.abs(swipeDistance) > swipeThreshold) {
-                if (swipeDistance > 0 && touchStartX < 50) {
-                    // Swipe right - open sidebar
-                    if (!sidebar.classList.contains('active')) {
-                        toggleSidebar();
-                    }
-                } else if (swipeDistance < 0) {
-                    // Swipe left - close sidebar
-                    if (sidebar.classList.contains('active')) {
-                        toggleSidebar();
-                    }
-                }
-            }
-        }
-
-        // Handle orientation change
-        window.addEventListener('orientationchange', function() {
-            // Close sidebar on orientation change for better UX
-            if (window.innerWidth >= 992) {
-                sidebar.classList.remove('active');
-                mobileOverlay.classList.remove('active');
-                document.body.classList.remove('sidebar-open');
-            }
-            
-            // Small timeout to ensure CSS recalculation
-            setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-            }, 300);
-        });
-
-        // Responsive resize handler
-        window.addEventListener('resize', function() {
-            if (window.innerWidth >= 992) {
-                sidebar.classList.remove('active');
-                mobileOverlay.classList.remove('active');
-                document.body.classList.remove('sidebar-open');
-            }
-        });
-
-        // Access message function
-        function showAccessMessage(roleType) {
-            const messages = {
-                'admin': 'WAJIB LOGIN SEBAGAI ADMINISTRATOR UNTUK MENGAKSES BAGIAN INI',
-                'kelas': 'WAJIB LOGIN SEBAGAI PERWAKILAN KELAS UNTUK MENGAKSES BAGIAN INI'
-            };
-            
-            const message = messages[roleType] || 'Akses ditolak. Silakan login terlebih dahulu.';
-            document.getElementById('accessMessage').textContent = message;
-            
+    // 7. Utilitas Pesan Akses
+    function showAccessMessage(roleType) {
+        const msg = roleType === 'admin' ? 'ADMINISTRATOR' : 'PERWAKILAN KELAS';
+        const targetElement = document.getElementById('accessMessage');
+        if (targetElement) {
+            targetElement.textContent = `WAJIB LOGIN SEBAGAI ${msg} UNTUK MENGAKSES BAGIAN INI`;
             const modal = new bootstrap.Modal(document.getElementById('accessAlertModal'));
             modal.show();
         }
-
-        // Prevent zoom on double tap (iOS)
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-
-        // Load CSS for mobile optimization
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add touch-specific classes
-            if ('ontouchstart' in window || navigator.maxTouchPoints) {
-                document.body.classList.add('touch-device');
-            } else {
-                document.body.classList.add('no-touch-device');
-            }
-
-            // Initialize animations
-            if (typeof DasherAnimations !== 'undefined') {
-                DasherAnimations.init();
-            }
-        });
-
-        // Login success effects
-        @if(session('login_success'))
-        document.addEventListener('DOMContentLoaded', function() {
-            // Highlight the appropriate menu item based on role
-            setTimeout(() => {
-                @if(session('user_role') === 'admin')
-                    const adminMenu = document.querySelector('a[href="{{ route('dashboard.admin') }}"]');
-                    if (adminMenu) {
-                        adminMenu.classList.add('pulse-highlight');
-                        setTimeout(() => adminMenu.classList.remove('pulse-highlight'), 3000);
-                    }
-                @else
-                    const kelasMenu = document.querySelector('a[href="{{ route('dashboard.kelas') }}"]');
-                    if (kelasMenu) {
-                        kelasMenu.classList.add('pulse-highlight');
-                        setTimeout(() => kelasMenu.classList.remove('pulse-highlight'), 3000);
-                    }
-                @endif
-            }, 1500);
-        });
-        @endif
-    </script>
+    }
+</script>
     
     @stack('scripts')
 </body>

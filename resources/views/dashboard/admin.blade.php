@@ -1,13 +1,16 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard Admin - JTIKROOMS')
+
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/admin.css') }}" />
- 
+
+
 @section('content')
 @php
 use App\Models\Booking;
 use App\Models\Room;
+use Carbon\Carbon;
 @endphp
 
 <div class="content-wrapper">
@@ -52,10 +55,10 @@ use App\Models\Room;
             </div>
             <div class="stat-content">
                 <span class="stat-number">{{ $availableRooms }}</span>
-                <span class="stat-label">Tersedia</span>
+                <span class="stat-label">Tersedia Saat Ini</span>
             </div>
             <div class="stat-trend">
-                <i class="fas fa-calendar-check"></i>
+                <i class="fas fa-clock"></i>
             </div>
         </div>
         
@@ -65,7 +68,7 @@ use App\Models\Room;
             </div>
             <div class="stat-content">
                 <span class="stat-number">{{ $totalUsers }}</span>
-                <span class="stat-label">Total Pengguna</span>
+                <span class="stat-label">Total User</span>
             </div>
             <div class="stat-trend">
                 <i class="fas fa-user-plus"></i>
@@ -93,11 +96,12 @@ use App\Models\Room;
             <!-- Quick Actions -->
             <div class="card actions-card">
                 <div class="card-header">
-                    <h3><i class="fas fa-bolt me-2"></i>Quick Actions</h3>
+                    <h3><i class="fas fa-bolt me-2"></i>Menu Utama</h3>
                     <span class="badge">Akses Cepat</span>
                 </div>
                 <div class="card-body">
                     <div class="actions-grid">
+                        <!-- Menu Ruangan -->
                         <button class="action-btn primary" onclick="showRoomManagement()">
                             <div class="action-icon">
                                 <i class="fas fa-door-open"></i>
@@ -109,6 +113,7 @@ use App\Models\Room;
                             <i class="fas fa-arrow-right action-arrow"></i>
                         </button>
                         
+                        <!-- Menu User -->
                         <button class="action-btn success" onclick="showUserManagement()">
                             <div class="action-icon">
                                 <i class="fas fa-users-cog"></i>
@@ -119,17 +124,21 @@ use App\Models\Room;
                             </div>
                             <i class="fas fa-arrow-right action-arrow"></i>
                         </button>
+
+                        <!-- Menu Informasi -->
                         <button class="action-btn info" onclick="showInformationManagement()">
-    <div class="action-icon">
-        <i class="fas fa-info-circle"></i>
-    </div>
-    <div class="action-text">
-        <span class="action-title">Manajemen Informasi</span>
-        <span class="action-desc">Kelola informasi JTIK</span>
-    </div>
-    <i class="fas fa-arrow-right action-arrow"></i>
-</button>
-                        <button class="action-btn info" onclick="showReports()">
+                            <div class="action-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="action-text">
+                                <span class="action-title">Manajemen Informasi</span>
+                                <span class="action-desc">Kelola informasi JTIK</span>
+                            </div>
+                            <i class="fas fa-arrow-right action-arrow"></i>
+                        </button>
+
+                        <!-- Menu Laporan -->
+                        <button class="action-btn warning" onclick="showReports()">
                             <div class="action-icon">
                                 <i class="fas fa-chart-bar"></i>
                             </div>
@@ -139,20 +148,34 @@ use App\Models\Room;
                             </div>
                             <i class="fas fa-arrow-right action-arrow"></i>
                         </button>
+
+                        <!-- MENU BARU: MANAJEMEN KOMENTAR (Warna Ungu) -->
+                        <button class="action-btn" onclick="location.href='{{ route('admin.comments.index') }}'">
+                            <div class="action-icon" style="background: #9333ea; color: white;">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="action-text">
+                                <span class="action-title" >Komentar</span>
+                                <span class="action-desc">Inbox & Keluhan</span>
+                            </div>
+                            <i class="fas fa-arrow-right action-arrow"></i>
+                        </button>
+
                     </div>
                 </div>
             </div>
 
-            <!-- Compact Room Status -->
+            <!-- Compact Room Status (Realtime) -->
             <div class="card compact-rooms-card">
                 <div class="card-header">
-                    <h3><i class="fas fa-map-marked-alt me-2"></i>Status Ruangan</h3>
+                    <h3><i class="fas fa-map-marked-alt me-2"></i>Status Ruangan Live</h3>
                     <span class="badge bg-secondary">{{ $rooms->count() }} Ruangan</span>
                 </div>
                 <div class="card-body">
                     <div class="compact-rooms-grid">
                         @foreach($rooms as $room)
                             @php
+                                // Logika Status Realtime
                                 $statusInfo = $roomStatus[$room->name] ?? ['status' => 'available'];
                                 $isOccupied = $statusInfo['status'] === 'occupied';
                                 $isAvailable = $statusInfo['status'] === 'available';
@@ -162,7 +185,7 @@ use App\Models\Room;
                                 if ($isOccupied) {
                                     $activeBooking = Booking::where('room_name', $room->name)
                                         ->where('status', 'active')
-                                        ->where('waktu_berakhir', '>', now())
+                                        ->where('waktu_berakhir', '>', now()->timezone('Asia/Makassar'))
                                         ->first();
                                 }
                             @endphp
@@ -177,16 +200,10 @@ use App\Models\Room;
                                 <div class="compact-room-info">
                                     <span class="compact-room-name">{{ $room->display_name ?? $room->name }}</span>
                                     <span class="compact-room-status {{ $statusInfo['status'] }}">
-                                        @if($isAvailable)
-                                            Tersedia
-                                        @elseif($isOccupied)
-                                            Terpakai
-                                        @else
-                                            Maintenance
-                                        @endif
+                                        @if($isAvailable) Tersedia @elseif($isOccupied) Terpakai @else Maintenance @endif
                                     </span>
                                     @if($isOccupied && $activeBooking)
-                                        <small class="compact-room-time">{{ $activeBooking->waktu_berakhir->format('H:i') }}</small>
+                                        <small class="compact-room-time">Sampai {{ $activeBooking->waktu_berakhir->timezone('Asia/Makassar')->format('H:i') }}</small>
                                     @endif
                                 </div>
                             </div>
@@ -196,9 +213,8 @@ use App\Models\Room;
             </div>
         </div>
 
-        <!-- Right Column - Booking Aktif Full Height -->
+        <!-- Right Column - Booking Aktif List -->
         <div class="content-column">
-            <!-- Active Bookings - Full Height Card -->
             <div class="card bookings-card full-height-card">
                 <div class="card-header">
                     <h3><i class="fas fa-list-alt me-2"></i>Booking Aktif</h3>
@@ -222,35 +238,42 @@ use App\Models\Room;
                                     <div class="booking-details">
                                         <div class="detail-item">
                                             <i class="fas fa-book"></i>
-                                            <span>{{ $booking->mata_kuliah ?? 'N/A' }}</span>
+                                            <span>{{ $booking->mata_kuliah ?? '-' }}</span>
                                         </div>
                                         <div class="detail-item">
                                             <i class="fas fa-user-graduate"></i>
-                                            <span>{{ $booking->dosen ?? 'N/A' }}</span>
+                                            <span>{{ $booking->dosen ?? '-' }}</span>
                                         </div>
                                     </div>
                                     
                                     <div class="booking-footer">
                                         <div class="booking-time">
                                             <i class="fas fa-clock"></i>
-                                            <span>{{ $booking->waktu_mulai->format('H:i') }} - {{ $booking->waktu_berakhir->format('H:i') }}</span>
+                                            <span>{{ $booking->waktu_mulai->timezone('Asia/Makassar')->format('H:i') }} - {{ $booking->waktu_berakhir->timezone('Asia/Makassar')->format('H:i') }} WITA</span>
                                         </div>
                                         <div class="booking-actions">
                                             @php
-                                                $timeLeft = $booking->waktu_berakhir->diff(now());
+                                                $waktuBerakhir = $booking->waktu_berakhir->timezone('Asia/Makassar');
+                                                $sekarang = now()->timezone('Asia/Makassar');
+                                                $timeLeft = $waktuBerakhir->diff($sekarang);
                                                 $hoursLeft = $timeLeft->h;
                                                 $minutesLeft = $timeLeft->i;
+                                                
+                                                // Cek apakah sudah lewat (untuk jaga-jaga visual)
+                                                $isExpired = $sekarang > $waktuBerakhir;
                                             @endphp
-                                            <span class="time-badge {{ $hoursLeft > 0 ? 'warning' : 'danger' }}">
-                                                @if($hoursLeft > 0)
-                                                    {{ $hoursLeft }}j {{ $minutesLeft }}m
-                                                @else
-                                                    {{ $minutesLeft }}m
-                                                @endif
-                                            </span>
+                                            
+                                            @if(!$isExpired)
+                                                <span class="time-badge {{ $hoursLeft > 0 ? 'warning' : 'danger' }}">
+                                                    {{ $hoursLeft > 0 ? $hoursLeft.'j '.$minutesLeft.'m' : $minutesLeft.'m' }}
+                                                </span>
+                                            @else
+                                                <span class="time-badge danger">Selesai</span>
+                                            @endif
+
                                             <form action="{{ route('booking.cancel', $booking->id) }}" method="POST" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn-cancel" onclick="return confirm('Yakin ingin membatalkan booking ini?')">
+                                                <button type="submit" class="btn-cancel" onclick="return confirm('Yakin ingin menghapus booking ini? Data akan tersimpan di Laporan sebagai Dibatalkan.')">
                                                     <i class="fas fa-times"></i>
                                                 </button>
                                             </form>
@@ -262,10 +285,11 @@ use App\Models\Room;
                     @else
                         <div class="empty-state">
                             <div class="empty-icon">
-                                <i class="fas fa-calendar-times"></i>
+                                <i class="fas fa-calendar-check"></i>
                             </div>
-                            <h4>Tidak ada booking aktif</h4>
-                            <p>Semua ruangan sedang tidak digunakan</p>
+                            <h4>Semua Beres!</h4>
+                            <p>Tidak ada booking aktif saat ini.</p>
+                            <small class="text-muted">Data historis bisa dilihat di menu Laporan.</small>
                         </div>
                     @endif
                 </div>
@@ -273,107 +297,30 @@ use App\Models\Room;
         </div>
     </div>
 </div>
-<style>/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: white;
-    border-radius: 20px;
-    padding: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-}
-
-.stat-card.primary::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
-.stat-card.success::before { background: linear-gradient(90deg, #10b981, #059669); }
-.stat-card.info::before { background: linear-gradient(90deg, #06b6d4, #0891b2); }
-.stat-card.warning::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
-
-.stat-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-}
-
-.stat-icon {
-    width: 70px;
-    height: 70px;
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: white;
-}
-
-.stat-card.primary .stat-icon { background: linear-gradient(135deg, #3b82f6, #6366f1); }
-.stat-card.success .stat-icon { background: linear-gradient(135deg, #10b981, #059669); }
-.stat-card.info .stat-icon { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-.stat-card.warning .stat-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
-
-.stat-content {
-    flex: 1;
-}
-
-.stat-number {
-    display: block;
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #1e293b;
-    line-height: 1;
-    margin-bottom: 0.25rem;
-}
-
-.stat-label {
-    color: #64748b;
-    font-size: 0.95rem;
-    font-weight: 600;
-}
-
-.stat-trend {
-    color: #cbd5e1;
-    font-size: 2rem;
-}</style>
 
 <script>
 function showRoomManagement() {
-    window.location.href = "/admin/rooms";
+    window.location.href = "{{ route('rooms.index') }}";
 }
 
 function showUserManagement() {
     window.location.href = "{{ route('users.index') }}";
 }
 
-function showReports() {
-    alert('Fitur Laporan & Analytics akan segera hadir!');
-}
-
-// Auto refresh every 30 seconds for real-time updates
-setInterval(() => {
-    // You can implement AJAX refresh here if needed
-    console.log('Auto-refresh dashboard data');
-}, 30000);
 function showInformationManagement() {
     window.location.href = "{{ route('admin.information.index') }}";
 }
+
+function showReports() {
+    window.location.href = "{{ route('reports.index') }}";
+}
+function showCommentManagement() {
+    window.location.href = "{{ route('admin.comments.index') }}";
+}
+
+// Auto refresh setiap 60 detik
+setInterval(() => {
+    window.location.reload();
+}, 60000);
 </script>
 @endsection

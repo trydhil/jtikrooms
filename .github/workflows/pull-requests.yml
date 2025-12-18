@@ -1,4 +1,5 @@
-name: Pull Requests
+cd C:\xampp\htdocs\jtikrooms
+Get-Content .\storage\logs\laravel.log -Tail 80 -Waitname: Pull Requests
 
 on:
   pull_request_target:

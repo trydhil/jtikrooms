@@ -12,9 +12,13 @@ return new class extends Migration
             $table->id();
             $table->string('username', 50)->unique();
             $table->string('password', 255);
-            $table->string('angkatan', 10)->nullable(); // TAMBAH INI
-            $table->string('prodi', 50)->nullable();    // TAMBAH INI  
-            $table->string('kelas', 10)->nullable();    // TAMBAH INI
+            
+            // ✅ FIELD TAMBAHAN AGAR TIDAK ERROR DI VIEW INDEX
+            $table->string('nama_kelas')->nullable(); // TEKOM A 2023
+            $table->string('prodi', 50)->nullable();  // TEKOM
+            $table->string('kelas', 10)->nullable();  // A
+            $table->string('angkatan', 10)->nullable(); // 2023
+            
             $table->timestamps();
         });
     }
