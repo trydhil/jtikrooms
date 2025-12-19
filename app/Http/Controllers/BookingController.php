@@ -7,6 +7,8 @@ use App\Models\Booking;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB; // ✅ TAMBAHKAN INI
+use Illuminate\Support\Facades\Cache; // ✅ TAMBAHKAN INI
 
 class BookingController extends Controller
 {
@@ -25,87 +27,85 @@ class BookingController extends Controller
     }
 
     // STORE BOOKING - Diperbarui
-    // ✅ OPTIMIZED BookingController.php
-
-public function store(Request $request)
-{
-    $request->validate([
-        'room_name' => 'required',
-        'mata_kuliah' => 'required',
-        'dosen' => 'required',
-        'waktu_berakhir' => 'required|date|after:30 minutes', // Built-in validation
-        'keterangan' => 'nullable'
-    ]);
-
-    try {
-        // 🚀 Use Laravel's timezone config (set in config/app.php)
-        $waktuMulai = now(); // Already uses Asia/Makassar from config
-        $waktuBerakhir = Carbon::parse($request->waktu_berakhir);
-        
-        // Validation
-        if ($waktuMulai->diffInMinutes($waktuBerakhir) < 30) {
-            return back()->with('error', 'Booking minimal 30 menit.')->withInput();
-        }
-
-        if ($waktuMulai->diffInHours($waktuBerakhir) > 5) {
-            return back()->with('error', 'Booking maksimal 5 jam.')->withInput();
-        }
-
-        // 🚀 Database lock to prevent race conditions
-        DB::transaction(function() use ($request, $waktuMulai, $waktuBerakhir) {
-            // Check overlap with row-level locking
-            $overlap = Booking::where('room_name', $request->room_name)
-                ->where('status', 'active')
-                ->where('waktu_berakhir', '>', now())
-                ->where(function($query) use ($waktuMulai, $waktuBerakhir) {
-                    $query->whereBetween('waktu_mulai', [$waktuMulai, $waktuBerakhir])
-                          ->orWhereBetween('waktu_berakhir', [$waktuMulai, $waktuBerakhir])
-                          ->orWhere(function($q) use ($waktuMulai, $waktuBerakhir) {
-                              $q->where('waktu_mulai', '<', $waktuMulai)
-                                ->where('waktu_berakhir', '>', $waktuBerakhir);
-                          });
-                })
-                ->lockForUpdate() // 🔒 Prevents double booking
-                ->first();
-
-            if ($overlap) {
-                throw new \Exception('Ruangan sudah dibooking dari ' 
-                    . $overlap->waktu_mulai->format('H:i') 
-                    . ' hingga ' 
-                    . $overlap->waktu_berakhir->format('H:i'));
-            }
-
-            Booking::create([
-                'room_name' => $request->room_name,
-                'username' => session('user'),
-                'mata_kuliah' => $request->mata_kuliah,
-                'dosen' => $request->dosen,
-                'waktu_mulai' => $waktuMulai,
-                'waktu_berakhir' => $waktuBerakhir,
-                'status' => 'active',
-                'keterangan' => $request->keterangan
-            ]);
-        });
-
-        // Clear relevant caches
-        Cache::forget('admin_dashboard_stats');
-
-        return redirect()
-            ->route('dashboard.kelas')
-            ->with('success', 'Booking berhasil! Ruangan: ' . $request->room_name);
-
-    } catch (\Exception $e) {
-        Log::error('Booking failed', [
-            'error' => $e->getMessage(),
-            'room' => $request->room_name,
-            'user' => session('user')
+    public function store(Request $request)
+    {
+        $request->validate([
+            'room_name' => 'required',
+            'mata_kuliah' => 'required',
+            'dosen' => 'required',
+            'waktu_berakhir' => 'required|date|after:30 minutes',
+            'keterangan' => 'nullable'
         ]);
 
-        return back()
-            ->with('error', $e->getMessage())
-            ->withInput();
+        try {
+            // 🚀 Use Laravel's timezone config (set in config/app.php)
+            $waktuMulai = now(); // Already uses Asia/Makassar from config
+            $waktuBerakhir = Carbon::parse($request->waktu_berakhir);
+            
+            // Validation
+            if ($waktuMulai->diffInMinutes($waktuBerakhir) < 30) {
+                return back()->with('error', 'Booking minimal 30 menit.')->withInput();
+            }
+
+            if ($waktuMulai->diffInHours($waktuBerakhir) > 5) {
+                return back()->with('error', 'Booking maksimal 5 jam.')->withInput();
+            }
+
+            // 🚀 Database lock to prevent race conditions
+            DB::transaction(function() use ($request, $waktuMulai, $waktuBerakhir) {
+                // Check overlap with row-level locking
+                $overlap = Booking::where('room_name', $request->room_name)
+                    ->where('status', 'active')
+                    ->where('waktu_berakhir', '>', now())
+                    ->where(function($query) use ($waktuMulai, $waktuBerakhir) {
+                        $query->whereBetween('waktu_mulai', [$waktuMulai, $waktuBerakhir])
+                              ->orWhereBetween('waktu_berakhir', [$waktuMulai, $waktuBerakhir])
+                              ->orWhere(function($q) use ($waktuMulai, $waktuBerakhir) {
+                                  $q->where('waktu_mulai', '<', $waktuMulai)
+                                    ->where('waktu_berakhir', '>', $waktuBerakhir);
+                              });
+                    })
+                    ->lockForUpdate() // 🔒 Prevents double booking
+                    ->first();
+
+                if ($overlap) {
+                    throw new \Exception('Ruangan sudah dibooking dari ' 
+                        . $overlap->waktu_mulai->format('H:i') 
+                        . ' hingga ' 
+                        . $overlap->waktu_berakhir->format('H:i'));
+                }
+
+                Booking::create([
+                    'room_name' => $request->room_name,
+                    'username' => session('user'),
+                    'mata_kuliah' => $request->mata_kuliah,
+                    'dosen' => $request->dosen,
+                    'waktu_mulai' => $waktuMulai,
+                    'waktu_berakhir' => $waktuBerakhir,
+                    'status' => 'active',
+                    'keterangan' => $request->keterangan
+                ]);
+            });
+
+            // Clear relevant caches
+            Cache::forget('admin_dashboard_stats');
+
+            return redirect()
+                ->route('dashboard.kelas')
+                ->with('success', 'Booking berhasil! Ruangan: ' . $request->room_name);
+
+        } catch (\Exception $e) {
+            Log::error('Booking failed', [
+                'error' => $e->getMessage(),
+                'room' => $request->room_name,
+                'user' => session('user')
+            ]);
+
+            return back()
+                ->with('error', $e->getMessage())
+                ->withInput();
+        }
     }
-}
 
     // Method lainnya tetap sama...
     public function getActiveBookings()
